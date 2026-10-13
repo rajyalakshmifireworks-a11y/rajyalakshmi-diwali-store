@@ -84,11 +84,25 @@ label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
 .err{color:var(--red);font-size:14px;margin:8px 0 0;min-height:18px}
 .send{width:100%;border:0;border-radius:14px;background:#1fa855;color:#fff;padding:15px;font:inherit;font-weight:600;font-size:17px;margin-top:8px}
 .note{color:var(--mute);font-size:13px;margin:10px 0 0;text-align:center}
+.combos{padding:18px 14px 8px}
+.combos-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.combos h2{font-size:25px}.combos-head p{margin:2px 0 0;color:var(--mute);font-size:14px}.combos-head .family{font-size:26px}
+.combo-list{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,82vw);gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 1px 8px}
+.combo-list::-webkit-scrollbar{display:none}
+.combo{scroll-snap-align:start;background:linear-gradient(145deg,#261848,#3a205f);color:#fff4e0;border:1px solid #4a3273;border-radius:18px;padding:15px;box-shadow:0 7px 18px rgba(26,16,48,.14)}
+.combo-top{display:flex;align-items:start;justify-content:space-between;gap:8px}.combo h3{font-family:Fraunces,serif;font-size:19px;margin:0}.combo-price{font-family:Fraunces,serif;font-size:21px;color:#ffbf43;white-space:nowrap}
+.combo-audience{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.combo-audience span{font-size:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:99px;padding:4px 8px}
+.combo-items{font-size:13px;line-height:1.45;color:#e5d9f5;margin:0 0 12px;min-height:56px}
+.combo-add{width:100%;min-height:44px;border:0;border-radius:12px;background:#ffb52e;color:#1a1030;font:inherit;font-weight:700}
+.combo-safety{font-size:12px;color:var(--mute);margin:4px 2px 0}
+.combo-msg{display:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0 2px;color:var(--ink);font-size:14px}
+.combo-msg.show{display:block}
+.more{width:100%;min-height:44px;border:1.5px solid var(--gold);border-radius:12px;background:transparent;color:var(--gold);font:inherit;font-weight:600;margin:2px 0 8px}
 @media (max-width:359px){
   .bar,.grid{padding-inline:10px}.grid{gap:8px}.info{padding:9px}.name{font-size:14px}.price{font-size:17px}.tag{font-size:11px}.add,.step{font-size:14px}
 }
 @media (min-width:600px){
-  .hero{aspect-ratio:16/11}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding-inline:18px}.bar{padding-inline:18px}
+  .hero{aspect-ratio:16/11}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding-inline:18px}.bar,.combos{padding-inline:18px}.combo-list{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}.combo-items{min-height:76px}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.chips,.car{scroll-behavior:auto}}
 </style>
@@ -103,6 +117,11 @@ label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
     <span class="off">Flat 20% off on every item</span>
   </div>
 </header>
+<section class="combos" aria-labelledby="combo-title">
+  <div class="combos-head"><div><h2 id="combo-title">Family Combos</h2><p>Balanced picks for kids, elders and everyone together.</p></div><span class="family" aria-hidden="true">👨‍👩‍👧‍👦</span></div>
+  <div class="combo-list" id="combos"></div>
+  <p class="combo-safety">Adult supervision is required. Use only where permitted and follow every product's safety instructions.</p>
+</section>
 <div class="bar">
   <input id="q" type="search" placeholder="Search crackers" aria-label="Search crackers" enterkeyhint="search" autocapitalize="none">
   <div class="chips" id="chips"></div>
@@ -114,8 +133,10 @@ label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Your order">
   <div class="panel">
     <h2>Your order <button class="x" id="close" aria-label="Close">✕</button></h2>
+    <div class="combo-msg" id="comboMsg" role="status" aria-live="polite"></div>
     <div id="lines"></div>
     <div class="total"><span>Total</span><span id="tot"></span></div>
+    <button class="more" id="more" type="button">Add more or swap items</button>
     <label for="nm">Name</label><input id="nm" autocomplete="name">
     <label for="ph">Mobile number</label><input id="ph" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel-national" placeholder="10-digit number">
     <label for="ad">Delivery address</label><textarea id="ad" rows="3" autocomplete="street-address"></textarea>
@@ -192,6 +213,11 @@ const PRODUCTS = [{"id":"P001","name":"Spinner Spl","cat":"Chakkar & Spinners","
   {"id":"P054","name":"Pencils","cat":"Sparklers","price":200,"mrp":250,"stock":30},
   {"id":"P055","name":"Ajanta Sky Chakkar","cat":"Chakkar & Spinners","price":700,"mrp":875,"stock":5},
   {"id":"P056","name":"Zameen Chakkar 45cm","cat":"Chakkar & Spinners","price":400,"mrp":500,"stock":5}];
+const COMBOS=[
+  {id:"family-1000",name:"Family Starter",budget:1000,kids:"Sparklers & pencils",elders:"Flower pot & waterfall",items:{P001:1,P041:1,P043:3,P044:2,P048:1,P054:1}},
+  {id:"family-2000",name:"Family Celebration",budget:2000,kids:"Pencils & helicopter",elders:"Flower pots & fountains",items:{P007:1,P014:1,P041:1,P048:1,P049:1,P050:1,P054:1}},
+  {id:"family-2500",name:"Grand Family Mix",budget:2500,kids:"Pencils, spinner & helicopter",elders:"Flower pots & waterfalls",items:{P001:1,P003:1,P005:1,P007:1,P014:1,P041:1,P048:1,P050:1,P054:1}}
+];
 /* ======================== */
 
 const IMG={P011:"images/P011.webp",P012:"images/P012.webp",P021:"images/P021.webp",P028:"images/P028.webp",P030:"images/P030.webp",P042:"images/P042.webp",P045:"images/P045.webp",P051:"images/P051.webp",P019:"images/P019.webp",P022:"images/P022.webp",P033:"images/P033.webp",P034:"images/P034.webp",P035:"images/P035.webp",P053:"images/P053.webp",P041:"images/P041.webp",P047:"images/P047.webp",P044:"images/P044.webp",P048:"images/P048.webp",P054:"images/P054.webp",P013:"images/P013.webp",P032:"images/P032.webp",P003:"images/P003.webp",P028b:"images/P028b.webp",P005:"images/P005.webp",P052:"images/P052.webp",P040:"images/P040.webp",P038:"images/P038.webp",P049:"images/P049.webp",P029:"images/P029.webp",P024:"images/P024.webp",P031:"images/P031.webp",P006a:"images/P006a.webp",P006b:"images/P006b.webp",P006c:"images/P006c.webp",P006d:"images/P006d.webp",P006e:"images/P006e.webp",P006f:"images/P006f.webp",P006g:"images/P006g.webp",P009:"images/P009.webp",P016:"images/P016.webp",P032b:"images/P032b.webp",A_jenis:"images/A_jenis.webp",A_shower:"images/A_shower.webp",A_zooper:"images/A_zooper.webp",A_whistle:"images/A_whistle.webp",A_hellboy:"images/A_hellboy.webp",A_longtubes:"images/A_longtubes.webp",A_unico:"images/A_unico.webp",A_elec15:"images/A_elec15.webp",A_ajanta:"images/A_ajanta.webp",P008:"images/P008.webp",P014:"images/P014.webp",P007:"images/P007.webp"};
@@ -205,6 +231,21 @@ try{cart=JSON.parse(localStorage.getItem("cart")||"{}")||{}}catch(e){cart={}}
 const save=()=>{try{localStorage.setItem("cart",JSON.stringify(cart))}catch(e){}};
 const byId=Object.fromEntries(PRODUCTS.map(p=>[p.id,p]));
 Object.keys(cart).forEach(k=>{if(!byId[k]||!byId[k].stock)delete cart[k]});
+
+function renderCombos(){
+  $("combos").innerHTML=COMBOS.map(c=>{
+    const contents=Object.entries(c.items).map(([id,q])=>`${q>1?q+"× ":""}${byId[id].name}`).join(" · ");
+    return `<article class="combo"><div class="combo-top"><h3>${c.name}</h3><span class="combo-price">${money(c.budget)}</span></div>
+      <div class="combo-audience"><span>🧒 ${c.kids}</span><span>👵 ${c.elders}</span></div>
+      <p class="combo-items">${contents}</p><button class="combo-add" data-combo="${c.id}">Add & customize</button></article>`;
+  }).join("");
+}
+function addCombo(id){
+  const combo=COMBOS.find(c=>c.id===id);if(!combo)return;
+  Object.entries(combo.items).forEach(([pid,q])=>{cart[pid]=Math.min((cart[pid]||0)+q,byId[pid].stock)});
+  save();grid();bar();lines();
+  openSheet(`${combo.name} added at ${money(combo.budget)}. Use + or − to add, swap or remove any item.`);
+}
 
 function chips(){
   const cats=["All",...new Set(PRODUCTS.map(p=>p.cat))];
@@ -251,18 +292,21 @@ function change(i,d){
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-d]");
   if(b)return change(b.dataset.i,+b.dataset.d);
+  const combo=e.target.closest("[data-combo]");
+  if(combo)return addCombo(combo.dataset.combo);
   const c=e.target.closest("[data-c]");
   if(c){cat=c.dataset.c;chips();grid()}
 });
 $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();grid()});
-function openSheet(){
-  lines();$("err").textContent="";$("sheet").classList.add("show");document.body.classList.add("sheet-open");$("close").focus();
+function openSheet(message=""){
+  lines();$("err").textContent="";$("comboMsg").textContent=message;$("comboMsg").classList.toggle("show",!!message);$("sheet").classList.add("show");document.body.classList.add("sheet-open");$("close").focus();
 }
 function closeSheet(){
   $("sheet").classList.remove("show");document.body.classList.remove("sheet-open");if(items().length)$("open").focus();
 }
-$("open").onclick=openSheet;
+$("open").onclick=()=>openSheet();
 $("close").onclick=closeSheet;
+$("more").onclick=()=>{closeSheet();document.querySelector(".bar").scrollIntoView({behavior:"smooth",block:"start"})};
 $("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("sheet").classList.contains("show"))closeSheet()});
 
@@ -284,7 +328,7 @@ $("send").onclick=()=>{
   window.location.href=`https://wa.me/${CONFIG.waNumber}?text=${encodeURIComponent(msg)}`;
 };
 
-chips();grid();bar();
+renderCombos();chips();grid();bar();
 </script>
 </body>
 </html>
