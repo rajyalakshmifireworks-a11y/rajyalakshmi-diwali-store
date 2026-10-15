@@ -28,10 +28,14 @@ h1,h2{font-family:Fraunces,Georgia,serif;margin:0}
 button,input,textarea{touch-action:manipulation}
 
 .hero{position:relative;aspect-ratio:1/1.05;max-height:78vh;overflow:hidden;border-radius:0 0 26px 26px;background:#1a1030}
-.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%}
+.hero-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:0;transform:scale(1.025);transition:opacity .9s ease,transform 5s ease}
+.hero-slide.on{opacity:1;transform:scale(1)}
 .hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,8,40,0) 52%,rgba(20,8,40,.6) 74%,rgba(20,8,40,.95) 100%)}
 .logo{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:12px;z-index:2;background:rgba(255,248,236,.94);border-radius:13px;padding:7px 10px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .logo img{display:block;height:clamp(36px,11vw,44px);width:auto;position:static}
+.hero-dots{position:absolute;right:18px;bottom:22px;z-index:3;display:flex;gap:7px}
+.hero-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);box-shadow:0 0 0 1px rgba(0,0,0,.14)}
+.hero-dots i.on{background:#ffb52e;transform:scale(1.25)}
 .hero .txt{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:0 clamp(16px,5vw,24px) clamp(18px,5vw,26px);color:#fff4e0}
 .hero h1{font-size:clamp(27px,8vw,36px);line-height:1.08;color:#fff4e0;text-wrap:balance}
 .hero p{margin:7px 0 11px;font-size:clamp(14px,4.2vw,17px);color:#f0dfc4}
@@ -104,13 +108,17 @@ label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
 @media (min-width:600px){
   .hero{aspect-ratio:16/11}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding-inline:18px}.bar,.combos{padding-inline:18px}.combo-list{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}.combo-items{min-height:76px}
 }
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.chips,.car{scroll-behavior:auto}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.chips,.car{scroll-behavior:auto}.hero-slide{transition:none;transform:none}}
 </style>
 </head>
 <body>
-<header class="hero">
-  <img src="images/hero.webp" alt="Diwali night with fireworks, a lit skyline and glowing diyas">
+<header class="hero" aria-roledescription="carousel" aria-label="Rajyalakshmi Fireworks festive collections">
+  <img class="hero-slide on" src="images/hero-carousel-1.jpg" alt="Festive collection of rockets, sparklers, flower pots and ground chakkars" aria-hidden="false">
+  <img class="hero-slide" src="images/hero-carousel-2.jpg" alt="Diwali fireworks above a glowing waterfront with cracker gift boxes" aria-hidden="true">
+  <img class="hero-slide" src="images/hero-carousel-3.jpg" alt="Decorated family fireworks gift boxes with diyas and marigolds" aria-hidden="true">
+  <img class="hero-slide" src="images/hero-carousel-4.jpg" alt="Colourful rockets, fountains, chakkars and sparklers at night" aria-hidden="true">
   <div class="logo"><img src="images/logo.webp" alt="Rajyalakshmi Fireworks"></div>
+  <div class="hero-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
   <div class="txt">
     <h1>Shubh Diwali Crackers</h1>
     <p>Certified quality, straight from Sivakasi.</p>
@@ -328,7 +336,18 @@ $("send").onclick=()=>{
   window.location.href=`https://wa.me/${CONFIG.waNumber}?text=${encodeURIComponent(msg)}`;
 };
 
-renderCombos();chips();grid();bar();
+function startHeroCarousel(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const slides=[...document.querySelectorAll(".hero-slide")],dots=[...document.querySelectorAll(".hero-dots i")];
+  let current=0;
+  setInterval(()=>{
+    if(document.hidden)return;
+    current=(current+1)%slides.length;
+    slides.forEach((slide,i)=>{const active=i===current;slide.classList.toggle("on",active);slide.setAttribute("aria-hidden",String(!active));dots[i].classList.toggle("on",active)});
+  },4200);
+}
+
+renderCombos();chips();grid();bar();startHeroCarousel();
 </script>
 </body>
 </html>
